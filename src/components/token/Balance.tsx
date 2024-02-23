@@ -1,17 +1,19 @@
-import { useTokenBalanceOf, useTokenTransferEvent } from "@/wagmi.generated";
+import {
+  useReadTokenBalanceOf,
+  useWatchTokenTransferEvent,
+} from "@/wagmi.generated";
 import { Typography } from "@mui/material";
 import { formatEther } from "viem";
 import { useAccount } from "wagmi";
 
 export function Balance() {
   const { address } = useAccount();
-  const { data: balance, refetch } = useTokenBalanceOf({
+  const { data: balance, refetch } = useReadTokenBalanceOf({
     args: address && [address ?? "0x0"],
-    enabled: !!address,
   });
 
-  useTokenTransferEvent({
-    listener: () => {
+  useWatchTokenTransferEvent({
+    onLogs: () => {
       refetch().catch(console.error);
     },
   });

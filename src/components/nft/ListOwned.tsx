@@ -1,7 +1,7 @@
-import { useNftTokenUriReads } from "@/wagmi.extra";
+import { useReadsNftTokenUri } from "@/wagmi.extra";
 import {
-  useNftListTokensByAddress,
-  useNftTransferEvent,
+  useReadNftListTokensByAddress,
+  useWatchNftTransferEvent,
 } from "@/wagmi.generated";
 import { Grid } from "@mui/material";
 import { map } from "lodash-es";
@@ -11,16 +11,15 @@ import { useAccount } from "wagmi";
 export function ListOwned() {
   const { address } = useAccount();
 
-  const { data: nftsList, refetch } = useNftListTokensByAddress({
+  const { data: nftsList, refetch } = useReadNftListTokensByAddress({
     args: [address ?? "0x0"],
-    enabled: !!address,
   });
 
-  const { data: uris } = useNftTokenUriReads(
+  const { data: uris } = useReadsNftTokenUri(
     map(nftsList).map((id) => ({
       args: [id],
       enabled: !!nftsList,
-    }))
+    })),
   );
 
   const [metadatas, setMetadatas] = useState<Metadata[]>([]);
@@ -30,13 +29,13 @@ export function ListOwned() {
     if (uris[0]?.error) return;
 
     const metadatas = (uris as Array<{ result: string }>).map(({ result }) =>
-      decodeMetadata(result)
+      decodeMetadata(result),
     );
     setMetadatas(metadatas);
   }, [uris]);
 
-  useNftTransferEvent({
-    listener: () => {
+  useWatchNftTransferEvent({
+    onLogs: () => {
       refetch().catch(console.error);
     },
   });
@@ -60,7 +59,7 @@ export function decodeMetadata(encoded: string): Metadata {
   return (
     encoded &&
     JSON.parse(
-      window.atob(encoded.replace("data:application/json;base64,", ""))
+      window.atob(encoded.replace("data:application/json;base64,", "")),
     )
   );
 }

@@ -1,29 +1,28 @@
-import { usePrepareNftMint } from "@/wagmi.generated";
+import { useWriteNftMint } from "@/wagmi.generated";
 import { Button } from "@mui/material";
-import { useAccount, useContractWrite, useWaitForTransaction } from "wagmi";
+import { useAccount } from "wagmi";
 
 export function Mint() {
   const { address } = useAccount();
-  const { config } = usePrepareNftMint({
-    args: address && [address],
-    enabled: !!address,
-  });
+  const { writeContract, isIdle, ...args } = useWriteNftMint();
+  console.log(args);
+  console.log(address);
 
-  const write = useContractWrite(config);
-
-  const wait = useWaitForTransaction({
-    hash: write.data?.hash,
-  });
-
-  const isLoading = wait.isLoading || write.isLoading;
+  if (!address) return null;
 
   return (
     <Button
       variant="contained"
-      disabled={isLoading}
-      onClick={() => write.write?.()}
+      disabled={!isIdle}
+      onClick={() => {
+        console.log(address);
+        writeContract({
+          functionName: "mint", // https://github.com/wevm/wagmi/issues/3613
+          args: [address],
+        });
+      }}
     >
-      {isLoading ? "Minting..." : "Mint NFT"}
+      {isIdle ? "Mint NFT" : "Minting..."}
     </Button>
   );
 }
